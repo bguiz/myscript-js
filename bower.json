@@ -1,0 +1,19 @@
+{
+  "name": "myscript-js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/bguiz/myscript-js",
+  "authors": [
+    "bguiz"
+  ],
+  "moduleType": [
+    "globals"
+  ],
+  "license": "GPLv3",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
