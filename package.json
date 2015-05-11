@@ -1,0 +1,32 @@
+{
+  "name": "myscript-js",
+  "version": "0.0.0",
+  "description": "Javascript integrations for MyScript by VisionObjects",
+  "main": "myscript.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bguiz/myscript-js"
+  },
+  "keywords": [
+    "myscript",
+    "handwriting",
+    "writing",
+    "recognition",
+    "OCR",
+    "math",
+    "equation",
+    "mathml",
+    "latex",
+    "mathjax",
+    "svg"
+  ],
+  "author": "bguiz",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/bguiz/myscript-js/issues"
+  },
+  "homepage": "https://github.com/bguiz/myscript-js"
+}
