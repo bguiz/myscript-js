@@ -1,6 +1,6 @@
 {
   "name": "myscript-js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/bguiz/myscript-js",
   "authors": [
     "bguiz"
@@ -15,5 +15,18 @@
     "bower_components",
     "test",
     "tests"
+  ],
+  "keywords": [
+    "myscript",
+    "handwriting",
+    "writing",
+    "recognition",
+    "OCR",
+    "math",
+    "equation",
+    "mathml",
+    "latex",
+    "mathjax",
+    "svg"
   ]
 }
