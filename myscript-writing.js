@@ -309,7 +309,6 @@
     }
     if (!context.elements) {
       // Construct elements from default class name, and throw if not found
-      //TODO
       context.elements = {};
     }
     [
@@ -326,9 +325,22 @@
     });
     if (!context.options) {
       // Use default elements
-      //TODO
       context.options = {};
     }
+    if (!context.options.pad) {
+      context.options.pad = {};
+    }
+    if (!context.options.pad.animation) {
+      context.options.pad.animation = {};
+    }
+    [
+      'appear',
+      'disappear'
+    ].forEach(function(name) {
+      if (isUndefined(context.options.pad.animation[name])) {
+        throw new Error('Must supply context.options.pad.animation.'+name);
+      }
+    });
     if (!context.options.stroke) {
       context.options.stroke = {};
     }
@@ -354,7 +366,6 @@
     });
     if (!context.callbacks) {
       // Simply use no-op callbacks
-      //TODO
       context.callbacks = {};
     }
     [
