@@ -259,7 +259,7 @@
       //clean up all strokes discard them
       resetStrokes();
 
-      //TODO hide element
+      context.callbacks.onCancel();
     }
 
     function onDestroy() {
