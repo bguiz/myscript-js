@@ -1,6 +1,6 @@
 {
   "name": "myscript-js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Javascript integrations for MyScript by VisionObjects",
   "main": "myscript.js",
   "scripts": {
