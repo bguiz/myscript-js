@@ -1,18 +1,22 @@
 (function MyscriptWritingSetup() {
   'use strict';
 
+  var Handwriting;
+
   // Export as AMD/ CommonJs/ `window` variable
   if (typeof define === 'function' && define.amd) {
-    define(function() { return MyscriptWriting; });
+    define(['handwriting'], function(handwriting) {
+      Handwriting = handwriting;
+      return MyscriptWriting;
+    });
   }
   else if (typeof module !== 'undefined') {
     module.exports = MyscriptWriting;
-  }
-  else if (typeof self !== 'undefined') {
-    self.MyscriptWriting = MyscriptWriting;
+    Handwriting = require('handwriting');
   }
   else {
     window.MyscriptWriting = MyscriptWriting;
+    Handwriting = window.Handwriting;
   }
 
   function MyscriptWriting(context) {
@@ -23,6 +27,12 @@
     var currentSvgPathElement;
     var strokes;
     var undoStrokes;
+
+    // Intialise dependencies
+    var handwriting;
+    if (typeof Handwriting === 'function') {
+      handwriting = Handwriting();
+    }
 
     // initialise listeners
     disableBounce(true);
@@ -77,7 +87,7 @@
         // - In IE, the above fails too, but the reasons are unclear and undocumented
         var rect = context.elements.svg.getBoundingClientRect();
         if (rect.width || rect.height || context.elements.svg.getClientRects().length) {
-          var doc = context.elements.svg.ownerDocument
+          var doc = context.elements.svg.ownerDocument;
           var docElement = doc.documentElement;
 
           //TODO invsetigate whether `window` could be something else
@@ -212,14 +222,89 @@
             y: currentStroke.ys[i],
           });
         }
-        var newPoints = window.simplify(points, context.options.simplify.tolerance, isHighQuality);
-        var newSvgPathString = 'M '+newPoints[0].x+' '+newPoints[0].y+' ';
-        for (var j = 1; j < newPoints.length; ++j) {
-          newSvgPathString += 'L '+newPoints[j].x+' '+newPoints[j].y+' ';
+        try {
+          var newPoints = window.simplify(points, context.options.simplify.tolerance, isHighQuality);
+          currentStroke.simplified = {
+            xs: new Array(newPoints.length),
+            ys: new Array(newPoints.length),
+          };
+          var newSvgPathString = 'M '+newPoints[0].x+' '+newPoints[0].y+' ';
+          currentStroke.simplified.xs[0] = newPoints[0].x;
+          currentStroke.simplified.ys[0] = newPoints[0].y;
+          for (var j = 1; j < newPoints.length; ++j) {
+            newSvgPathString += 'L '+newPoints[j].x+' '+newPoints[j].y+' ';
+            currentStroke.simplified.xs[j] = newPoints[j].x;
+            currentStroke.simplified.ys[j] = newPoints[j].y;
+          }
+          currentStroke.path = newSvgPathString;
+          currentSvgPathElement.setAttribute('d', currentStroke.path);
         }
-        currentStroke.path = newSvgPathString;
-        currentSvgPathElement.setAttribute('d', currentStroke.path);
+        catch (ex) {
+          console.log(ex);
+        }
       }
+    }
+
+    function recognisePreemptive() {
+      if (!handwriting) {
+        return;
+      }
+
+      //TODO pass in most recent few strokes based on time lapsed -
+      // strokes that are close tgether are likely to belong to the same character.
+      // For now, we only send the most recent stroke,
+      // since we only care about scribbles for now.
+      var inputStrokes;
+      if (currentStroke.simplified) {
+        inputStrokes = [currentStroke.simplified];
+      }
+      else {
+        inputStrokes = [currentStroke];
+      }
+
+      var recognisedWriting;
+      try {
+        recognisedWriting = handwriting.recognisePoints(inputStrokes);
+        console.log('recognisedWriting', recognisedWriting);
+      }
+      catch (ex) {
+        console.log(ex, ex.stack);
+      }
+
+      return recognisedWriting;
+    }
+
+    /**
+     * Finds any recent strokes that intersect a minimum number of times with the current stroke,
+     * and remove them.
+     *
+     * Assumes that the current stroke is a cancellation scribble.
+     */
+    function scribbleOutFromCurrentStroke() {
+      var scribbleRect = currentSvgPathElement.getBBox();
+      onUndo();
+      var didIntersect = true;
+      var idx = context.elements.svg.children.length - 1;
+      while (didIntersect && idx >= 0) {
+        var pathElement = context.elements.svg.children[idx];
+        var pathRect = pathElement.getBBox();
+
+        var areaIntersect =
+          Math.max(0, Math.max(scribbleRect.x + scribbleRect.width, pathRect.x + pathRect.width) -
+            Math.min(scribbleRect.x, pathRect.x)) *
+          Math.max(0, Math.max(scribbleRect.y + scribbleRect.height, pathRect.y + pathRect.height) -
+            Math.min(scribbleRect.y, pathRect.y));
+
+        var percentageIntersect =
+          areaIntersect / (pathRect.width * pathRect.height);
+        didIntersect = percentageIntersect >= 0.5;
+        if (didIntersect) {
+          onUndo();
+        }
+        --idx;
+      }
+      // Once we find the first one that does not intersect, we stop looking -
+      // scribbling only works for recent most strokes
     }
 
     function endStroke(evt) {
@@ -227,6 +312,14 @@
 
       //end the current stroke
       simplifyCurrentStroke(true);
+
+      //attempt to recognise certain strokes pre-emptively
+      var recognisedCharacter = recognisePreemptive();
+      if ( !!recognisedCharacter && !!recognisedCharacter.character &&
+        ( /^scribble-\d+/ ).test(recognisedCharacter.character.name) ) {
+        //recognised a scribble, work out if we can delete other characters underneath this one
+        scribbleOutFromCurrentStroke();
+      }
 
       // Next: only allow start stroke
       enableStrokeListeners(true, false, false);
