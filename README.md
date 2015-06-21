@@ -28,4 +28,3 @@ Maintained by Brendan Graetz
 ## Licence
 
 GPLv3
-
