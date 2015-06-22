@@ -71,29 +71,18 @@
       var x = 0;
       var y = 0;
 
-      // First, get the X, Y coordinates of the SVG element
-      if (typeof context.elements.svg.offsetLeft === 'number') {
-        // Webkit follows the HTML5 spec, `offsetLeft` and `offsetTop`
-        // properties are available on SVG elements
-        x -= context.elements.svg.offsetLeft;
-        y -= context.elements.svg.offsetTop;
-      }
-      else {
-        // Other web engines are buggy, and SVG elements do not inherit the
-        // required property.
-        // e.g.:
-        //
-        // - Firefox has a five year old bug: https://bugzilla.mozilla.org/show_bug.cgi?id=552113
-        // - In IE, the above fails too, but the reasons are unclear and undocumented
-        var rect = context.elements.svg.getBoundingClientRect();
-        if (rect.width || rect.height || context.elements.svg.getClientRects().length) {
-          var doc = context.elements.svg.ownerDocument;
-          var docElement = doc.documentElement;
+      // When using `position: absolute`, we cannot rely on
+      // `context.elements.svg.ownerDocument.{offsetLeft,offsetTop}`
+      // properties to be set correctly,
+      // so we have to compute it in full each time
+      var rect = context.elements.svg.getBoundingClientRect();
+      if (rect.width || rect.height || context.elements.svg.getClientRects().length) {
+        var doc = context.elements.svg.ownerDocument;
+        var docElement = doc.documentElement;
 
-          //TODO invsetigate whether `window` could be something else
-          x -= (rect.left + window.pageXOffset + docElement.clientLeft);
-          y -= (rect.top  + window.pageYOffset +  docElement.clientTop);
-        }
+        //TODO investigate whether `window` could be something else
+        x -= (rect.left + window.pageXOffset + docElement.clientLeft);
+        y -= (rect.top  + window.pageYOffset +  docElement.clientTop);
       }
 
       // Next get the X, Y coordinates of the point clicked on within the page
