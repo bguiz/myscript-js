@@ -319,7 +319,7 @@
       //clean up all strokes and submit them
       //hide element
 
-      context.callbacks.recognise(context.options.recogniseType, strokes)
+      context.callbacks.recognise(context.options.myscriptRecogniseType, strokes)
         .then(function onSuccess(data) {
           console.log('Recognised', data);
           //TODO attempt to insert the recognised text into the element that has the directive
@@ -330,7 +330,7 @@
         }, function onError(err) {
           //TODO display error
           resetStrokes();
-          context.calllbacks.onRecogniseFailure(err);
+          context.callbacks.onRecogniseFailure(err);
 
           //TODO hide element
         });
