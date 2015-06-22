@@ -18,7 +18,9 @@
   function MyscriptRecogniser() {
 
     function getApiUrl(inputType) {
-      return 'https://myscript-webservices.visionobjects.com/api/myscript/v2.0/'+inputType+'/doSimpleRecognition.json';
+      // TODO switch to new input types
+      return 'https://cloud.myscript.com/api/v3.0/recognition/rest/'+
+        'math'+'/doSimpleRecognition.json';
     }
 
     function getApiKey() {
@@ -38,8 +40,8 @@
 
     function processStrokesForEquation(strokes) {
       return {
-        apiKey: getApiKey(),
-        equationInput: JSON.stringify({
+        applicationKey: getApiKey(),
+        mathInput: JSON.stringify({
           resultTypes:['LATEX', 'MATHML'],
           components: processStrokeList(strokes),
         }),
@@ -55,34 +57,37 @@
     }
 
     function recogniseEquation(strokes, callback) {
-      var strokeData =
-        transformObjectToWwwFormUrlEncoded( processStrokesForEquation(strokes) );
+      var data = transformObjectToWwwFormUrlEncoded(processStrokesForEquation(strokes));
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', getApiUrl('equation'), true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.withCredentials = true;
+      xhr.onreadystatechange = onXhrStateChange;
+      xhr.msCaching = 'disabled';
+      xhr.send(data);
+      console.log('recogniseEquation sent', data);
 
-      var request = new XMLHttpRequest();
-      request.open('POST', getApiUrl('equation'), true);
-      request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-
-      request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-          // Success!
-          var data = JSON.parse(request.responseText);
-          callback(undefined, {
-            data: data,
-            request: request,
-          });
-        } else {
-          // We reached our target server, but it returned an error
-          callback(request);
+      function onXhrStateChange() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            var data;
+            if (typeof xhr.response === 'string') {
+              data = JSON.parse(xhr.response);
+            }
+            else {
+              data = xhr.response;
+            }
+            callback(undefined, {
+              data: data,
+              request: xhr,
+            });
+          }
+          else {
+            callback(xhr);
+          }
         }
-      };
-
-      request.onerror = function(err) {
-        // There was a connection error of some sort
-        err = err || request;
-        callback(err);
-      };
-
-      request.send(strokeData);
+      }
 
       // //NOTE myscript does not currently accept `application/json`,
       // //only `application/x-www-form-urlencoded`
