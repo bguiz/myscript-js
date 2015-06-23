@@ -1,23 +1,26 @@
-(function MyscriptWritingSetup() {
-  'use strict';
+/* globals console, angular */
+'use strict';
 
-  var Handwriting;
-
-  // Export as AMD/ CommonJs/ `window` variable
+(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['handwriting'], function(handwriting) {
-      Handwriting = handwriting;
-      return MyscriptWriting;
-    });
+    define('myscript-writing', [
+      'handwriting'
+      ], factory);
   }
-  else if (typeof module !== 'undefined') {
-    module.exports = MyscriptWriting;
-    Handwriting = require('handwriting');
+  else if (typeof exports === 'object') {
+    module.exports = factory(
+      require('handwriting')
+      );
   }
   else {
-    window.MyscriptWriting = MyscriptWriting;
-    Handwriting = window.Handwriting;
+    root.MyscriptWriting = factory(
+      root.Handwriting
+      );
   }
+})(this, MyscriptWritingSetup);
+
+function MyscriptWritingSetup(Handwriting) {
+  return MyscriptWriting;
 
   function MyscriptWriting(context) {
     validateContext(context);
@@ -464,4 +467,4 @@
   function isUndefined(thing) {
     return (typeof thing === 'undefined');
   }
-})();
+}
