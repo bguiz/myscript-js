@@ -1,19 +1,23 @@
-(function MyscriptRecogniserSetup() {
-  'use strict';
+/* globals console, angular */
+'use strict';
 
-  // Export as AMD/ CommonJs/ `window` variable
+(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(function() { return MyscriptRecogniser; });
+    define('myscript-writing', [
+      ], factory);
   }
-  else if (typeof module !== 'undefined') {
-    module.exports = MyscriptRecogniser;
-  }
-  else if (typeof self !== 'undefined') {
-    self.MyscriptRecogniser = MyscriptRecogniser;
+  else if (typeof exports === 'object') {
+    module.exports = factory(
+      );
   }
   else {
-    window.MyscriptRecogniser = MyscriptRecogniser;
+    root.MyscriptRecogniser = factory(
+      );
   }
+})(this, MyscriptRecogniserSetup);
+
+function MyscriptRecogniserSetup() {
+  return MyscriptRecogniser;
 
   function MyscriptRecogniser() {
 
@@ -120,4 +124,4 @@
       recognise: recognise,
     };
   }
-})();
+}
