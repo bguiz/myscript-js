@@ -321,11 +321,9 @@ function MyscriptWritingSetup(Handwriting) {
     function onDone() {
       console.log('onDone');
       //clean up all strokes and submit them
-
       context.callbacks.recognise(context.recogniseType, strokes, function onRecognise(err, data) {
-        resetStrokes();
         if (!err) {
-          context.callbacks.onRecogniseSuccess(data);
+          resetStrokes();
         }
         else {
           context.callbacks.onRecogniseFailure(err);
