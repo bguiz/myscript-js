@@ -206,7 +206,8 @@ function MyscriptWritingSetup(Handwriting) {
         return; // Skip simplification step
       }
       var pointsCount = currentStroke.xs.length;
-      if (pointsCount > context.options.simplify.minimumPointsCount && typeof window.simplify === 'function') {
+      if (pointsCount > context.options.simplify.minimumPointsCount &&
+          typeof window.simplify === 'function') {
         var points = [];
         for (var i = 0; i < pointsCount; ++i) {
           points.push({
@@ -320,23 +321,16 @@ function MyscriptWritingSetup(Handwriting) {
     function onDone() {
       console.log('onDone');
       //clean up all strokes and submit them
-      //hide element
 
-      context.callbacks.recognise(context.options.myscriptRecogniseType, strokes)
-        .then(function onSuccess(data) {
-          console.log('Recognised', data);
-          //TODO attempt to insert the recognised text into the element that has the directive
-          resetStrokes();
+      context.callbacks.recognise(context.recogniseType, strokes, function onRecognise(err, data) {
+        resetStrokes();
+        if (!err) {
           context.callbacks.onRecogniseSuccess(data);
-
-          //TODO hide element
-        }, function onError(err) {
-          //TODO display error
-          resetStrokes();
+        }
+        else {
           context.callbacks.onRecogniseFailure(err);
-
-          //TODO hide element
-        });
+        }
+      });
     }
 
     function onCancel() {
