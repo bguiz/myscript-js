@@ -24,7 +24,9 @@ function MyscriptRecogniserSetup() {
     function getApiUrl(inputType) {
       // TODO switch to new input types
       return 'https://cloud.myscript.com/api/v3.0/recognition/rest/'+
-        'math'+'/doSimpleRecognition.json';
+        // inputType+ //TODO re-enable this
+        'math'+
+        '/doSimpleRecognition.json';
     }
 
     function getApiKey() {
@@ -92,22 +94,6 @@ function MyscriptRecogniserSetup() {
           }
         }
       }
-
-      // //NOTE myscript does not currently accept `application/json`,
-      // //only `application/x-www-form-urlencoded`
-      // return $http({
-      //     method: 'POST',
-      //     url: getApiUrl('equation'),
-      //     headers: {
-      //       'Content-Type': 'application/x-www-form-urlencoded'
-      //     },
-      //     data: strokeData,
-      //   })
-      //   .then(function(result) {
-      //     //TODO process the result
-      //     console.log(result);
-      //     return result;
-      //   });
     }
 
     function recognise(recogniseType, strokes, callback) {
