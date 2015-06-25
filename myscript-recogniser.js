@@ -21,11 +21,14 @@ function MyscriptRecogniserSetup() {
 
   function MyscriptRecogniser() {
 
+    var inputTypeDictionary = {
+      digits: 'text',
+    };
+
     function getApiUrl(inputType) {
       // TODO switch to new input types
       return 'https://cloud.myscript.com/api/v3.0/recognition/rest/'+
-        // inputType+ //TODO re-enable this
-        'math'+
+        (inputTypeDictionary[inputType] || inputType) +
         '/doSimpleRecognition.json';
     }
 
@@ -44,44 +47,89 @@ function MyscriptRecogniserSetup() {
       });
     }
 
-    function processStrokesForEquation(strokes) {
+    function processStrokesForMath(strokes) {
       return {
-        applicationKey: getApiKey(),
-        mathInput: JSON.stringify({
+        mathInput: {
           resultTypes:['LATEX', 'MATHML'],
           components: processStrokeList(strokes),
-        }),
+        },
       };
     }
 
+    function processStrokesForText_textInput(strokes) {
+      var components = processStrokeList(strokes);
+      return {
+        inputUnits: [{
+          textInputType: 'WORD',
+          components: components,
+        }],
+        textParameter: {
+          language: 'en_US',
+        },
+      };
+    }
+
+    function processStrokesForText(strokes) {
+      var textInput = processStrokesForText_textInput(strokes);
+      return {
+        textInput: textInput,
+      };
+    }
+
+    function processStrokesForDigits(strokes) {
+      var textInput = processStrokesForText_textInput(strokes);
+      textInput.textParameter.subsetKnowledges = ['digit'];
+      return {
+        textInput: textInput,
+      };
+    }
+
+    var processStrokesDictionary = {
+      math: processStrokesForMath,
+      text: processStrokesForText,
+      digits: processStrokesForDigits,
+    };
+
+    function processStrokesForAnyType(recogniseType, strokes) {
+      var processFn = processStrokesDictionary[recogniseType];
+      return processFn(strokes);
+    }
+
     function transformObjectToWwwFormUrlEncoded(data) {
+      data.applicationKey = getApiKey();
       var keyVals = [];
-      for (var key in data) {
-        keyVals.push(encodeURIComponent(key)+'='+encodeURIComponent(data[key]));
+      var key, val;
+      for (key in data) {
+        val = data[key];
+        val = typeof val === 'object' ? JSON.stringify(val) : val;
+        keyVals.push(encodeURIComponent(key)+'='+encodeURIComponent(val));
       }
       return keyVals.join('&');
     }
 
     function recogniseEquation(strokes, callback) {
-      var data = transformObjectToWwwFormUrlEncoded(processStrokesForEquation(strokes));
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', getApiUrl('equation'), true);
+    }
+
+    function recogniseAnyType(recogniseType, strokes, callback) {
+      var data = transformObjectToWwwFormUrlEncoded(processStrokesForAnyType(recogniseType, strokes));
+      var xhr = new window.XMLHttpRequest();
+      xhr.open('POST', getApiUrl(recogniseType), true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
       xhr.setRequestHeader('Accept', 'application/json');
       xhr.withCredentials = true;
       xhr.onreadystatechange = onXhrStateChange;
       xhr.msCaching = 'disabled';
       xhr.send(data);
-      console.log('recogniseEquation sent', data);
+      console.log('recognise sent', recogniseType, data);
 
       function onXhrStateChange() {
         if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
+          if (xhr.status >= 200 && xhr.status <= 299) {
             var data;
-            if (typeof xhr.response === 'string') {
+            try {
               data = JSON.parse(xhr.response);
             }
-            else {
+            catch (ex) {
               data = xhr.response;
             }
             callback(undefined, {
@@ -98,8 +146,11 @@ function MyscriptRecogniserSetup() {
 
     function recognise(recogniseType, strokes, callback) {
       switch (recogniseType) {
-        case 'equation':
-          return recogniseEquation(strokes, callback);
+        case 'math':
+        case 'text':
+        case 'digits':
+          // return recogniseEquation(strokes, callback);
+          return recogniseAnyType(recogniseType, strokes, callback);
         default:
           // Return a promise that rejects immediately
           return callback('Recognise type unsupported: '+recogniseType);
