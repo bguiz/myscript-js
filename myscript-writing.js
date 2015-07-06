@@ -321,7 +321,11 @@ function MyscriptWritingSetup(Handwriting) {
     function onDone() {
       console.log('onDone');
       //clean up all strokes and submit them
+      enableStrokeListeners(false);
+      enableButtonListeners(false);
       context.callbacks.recognise(context.recogniseType, strokes, function onRecognise(err, data) {
+        enableStrokeListeners(true);
+        enableButtonListeners(true);
         if (!err) {
           resetStrokes();
         }
